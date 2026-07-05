@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import type { HealthResponse } from "@/lib/types";
 
 type Status = "checking" | "ok" | "degraded" | "unreachable";
 
@@ -12,9 +12,13 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string }> = {
   unreachable: { label: "API unreachable", color: "var(--status-critical)" },
 };
 
-/** Polls GET /health so the dashboard always shows current API/DB status —
- * never color alone: an icon dot is paired with a text label per the
- * project's accessibility conventions for status indicators. */
+/** Polls GET /api/health (a same-origin Next.js route that proxies the
+ * backend) so the dashboard always shows current API/DB status — never
+ * color alone: an icon dot is paired with a text label per the project's
+ * accessibility conventions. Calling the proxy rather than the backend
+ * directly matters concretely here: some ad-blocker filter lists flag
+ * `/health`-style paths as tracking beacons and silently drop the request,
+ * which broke this badge for those visitors even though the API was fine. */
 export function ApiStatusBadge() {
   const [status, setStatus] = useState<Status>("checking");
 
@@ -23,7 +27,8 @@ export function ApiStatusBadge() {
 
     async function check() {
       try {
-        const health = await api.getHealth();
+        const response = await fetch("/api/health", { cache: "no-store" });
+        const health = (await response.json()) as HealthResponse;
         if (cancelled) return;
         setStatus(health.mongodb_connected ? "ok" : "degraded");
       } catch {
