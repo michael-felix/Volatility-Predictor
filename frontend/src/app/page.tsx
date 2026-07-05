@@ -21,7 +21,7 @@ export default async function HomePage() {
       }),
     );
   } catch {
-    loadError = "Could not reach the API. Is the backend running?";
+    loadError = "Could not reach the API. Backend might be unavailable.";
   }
 
   return (

@@ -1,5 +1,6 @@
 """Tests for TrainingService: pooling feature rows across tickers before training."""
 
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -94,3 +95,34 @@ class TestTrainingService:
 
         _, loaded_metadata = await registry.load_model("volatility_predictor")
         assert loaded_metadata.version == metadata.version
+
+    async def test_training_does_not_block_the_event_loop(
+        self, price_repository: PriceRepository, tmp_path: Path
+    ) -> None:
+        """train_model cross-validates several CPU-bound models and must run
+        off the event loop (see asyncio.to_thread in train_pooled_model) --
+        otherwise it freezes the whole API for every concurrent request, not
+        just the one that triggered training. A "heartbeat" coroutine ticking
+        via asyncio.sleep can only make progress if the event loop is free;
+        if training blocked it, the heartbeat count would stay near zero."""
+        await _seed_ticker(price_repository, "AAPL", n_days=150, seed=1)
+        registry = FileSystemModelRegistry(store_path=str(tmp_path))
+        service = TrainingService(price_repository, registry)
+
+        heartbeat_count = 0
+        stop = False
+
+        async def heartbeat() -> None:
+            nonlocal heartbeat_count
+            while not stop:
+                heartbeat_count += 1
+                await asyncio.sleep(0.01)
+
+        heartbeat_task = asyncio.create_task(heartbeat())
+        await service.train_pooled_model(
+            [Ticker("AAPL")], model_name="volatility_predictor", horizon_days=5
+        )
+        stop = True
+        await heartbeat_task
+
+        assert heartbeat_count > 5

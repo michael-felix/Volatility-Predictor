@@ -1,10 +1,46 @@
 # Stock Volatility Platform
 
 A real-time stock volatility prediction platform: ingests OHLCV market data,
-engineers volatility features, trains ML models, and serves predictions via
-a FastAPI REST API with a Next.js dashboard.
+engineers volatility features, cross-validates multiple forecasting models
+(including the classic econometric HAR-RV model alongside ML baselines),
+and serves predictions through a FastAPI backend and a Next.js dashboard.
 
-> Status: under active development. This README is updated as each layer is built.
+[![CI](https://github.com/michael-felix/Volatility-Predictor/actions/workflows/ci.yml/badge.svg)](https://github.com/michael-felix/Volatility-Predictor/actions/workflows/ci.yml)
+
+- **Live demo:** [volatility-predictor.vercel.app](https://volatility-predictor.vercel.app)
+- **API:** [volatility-platform-api.onrender.com](https://volatility-platform-api.onrender.com) ([OpenAPI docs](https://volatility-platform-api.onrender.com/docs))
+
+> The API is on Render's free tier and spins down after inactivity — the
+> first request after a while may take 30–60s to wake it back up.
+
+## Highlights
+
+- **Layered/hexagonal architecture** — domain logic has zero framework
+  dependencies; repositories and the model registry sit behind swappable
+  interfaces (filesystem vs. MongoDB, chosen per environment).
+- **Real model comparison, not a single black box** — four deliberately
+  different candidates (HAR-RV, ridge, random forest, XGBoost) are
+  time-series cross-validated every training run, scored on RMSE/MAE/R²
+  *and* QLIKE (the standard loss function in the volatility-forecasting
+  literature), with the best one automatically promoted to serving
+  predictions.
+- **MLOps-aware**: training runs offline against production data (not
+  inside a request handler), models are versioned, and every prediction
+  is traceable to the exact model version that produced it.
+- **Production deployment**, not just `localhost`: MongoDB Atlas, Render,
+  and Vercel, wired together with CI-gated deploys via GitHub Actions.
+- **100+ tests** across unit and integration layers, strict `mypy`, `ruff`,
+  and a CI pipeline that lints, type-checks, tests, and builds the Docker
+  image and the frontend on every push.
+
+## Tech stack
+
+| Layer | Tools |
+|---|---|
+| Backend | Python, FastAPI, Pydantic, MongoDB (Motor/PyMongo) |
+| ML | scikit-learn, XGBoost, pandas, time-series cross-validation |
+| Frontend | Next.js (App Router), React, TypeScript, Tailwind CSS, Recharts, Framer Motion |
+| Infra | Docker, GitHub Actions, MongoDB Atlas, Render, Vercel |
 
 ## Architecture
 
@@ -22,7 +58,8 @@ src/volatility_platform/
 └── config/            # Typed settings (pydantic-settings)
 ```
 
-See commit history / project notes for the reasoning behind this structure.
+See [Project layout rationale](#project-layout-rationale) below for the
+reasoning behind this structure.
 
 ## Local setup
 
@@ -119,16 +156,10 @@ Three pieces, each on the free/hobby tier of its platform: **MongoDB Atlas**
    `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/`. This becomes
    `MONGODB_URI` in Render.
 
-### 2. Push this repo to GitHub
-
-Nothing has been pushed yet — this repo currently only exists locally. Create
-the GitHub repo (via github.com's "New repository" button, or `gh repo create`
-if you have the GitHub CLI installed), then:
+### 2. Push to GitHub
 
 ```bash
 git remote add origin <your-repo-url>
-git add .
-git commit -m "Initial commit"
 git push -u origin master
 ```
 
@@ -181,3 +212,9 @@ via the GitHub web UI.)
 - **`services/` as the DI seam**: services depend on repository *interfaces*,
   not concrete MongoDB classes, so business logic can be unit-tested without
   a database and swapped to a different backing store later.
+
+## Disclaimer
+
+Educational/portfolio project, not a financial product. Predictions are
+statistical estimates based on historical price patterns — not guarantees
+of future price behavior, and not investment advice.

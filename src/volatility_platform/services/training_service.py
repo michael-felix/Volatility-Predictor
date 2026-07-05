@@ -13,6 +13,7 @@ just ones it happened to be trained on.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import pandas as pd
@@ -66,8 +67,14 @@ class TrainingService:
 
         pooled_frame = pd.concat(per_ticker_frames).sort_index()
 
-        model, metadata = train_model(
-            pooled_frame, model_name=model_name, horizon_days=horizon_days
+        # train_model is CPU-bound (cross-validates several models across
+        # several folds) and synchronous. Calling it directly here would
+        # block asyncio's single-threaded event loop for the entire
+        # duration — freezing the whole API, for every concurrent request,
+        # not just this one. Running it in a worker thread keeps the event
+        # loop free to serve other requests while training proceeds.
+        model, metadata = await asyncio.to_thread(
+            train_model, pooled_frame, model_name=model_name, horizon_days=horizon_days
         )
         await self._model_registry.save_model(model, metadata)
         return metadata
