@@ -1,0 +1,36 @@
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override host-oriented .env values so the containerized API reaches
+      # MongoDB via the Compose network's service DNS, and uses the
+      # MongoDB-backed model registry (matches the production backend
+      # decision — container filesystems aren't guaranteed persistent).
+      MONGODB_URI: mongodb://mongodb:27017
+      MODEL_REGISTRY_BACKEND: mongodb
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  mongodb_data:

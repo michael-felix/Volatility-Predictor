@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1
+
+# ---- Build stage: install the package + dependencies into an isolated venv ----
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy only what's needed to resolve dependencies before the full source,
+# so Docker's layer cache is invalidated only when dependencies actually change.
+COPY pyproject.toml README.md ./
+COPY src ./src
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
+
+# ---- Runtime stage: no compilers/build tools, just the venv + app ----
+FROM python:3.11-slim AS runtime
+
+RUN addgroup --system app && adduser --system --ingroup app app
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    MODEL_STORE_PATH=/app/models_store
+
+WORKDIR /app
+
+COPY --from=builder /opt/venv /opt/venv
+COPY docker/healthcheck.py /app/healthcheck.py
+
+RUN mkdir -p /app/models_store && chown -R app:app /app
+
+USER app
+
+EXPOSE 8000
+
+# --timeout must exceed /health's worst case: MongoDB's serverSelectionTimeoutMS (5s)
+# plus request overhead, when the database is unreachable and /health falls back to "degraded".
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python /app/healthcheck.py
+
+CMD ["uvicorn", "volatility_platform.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

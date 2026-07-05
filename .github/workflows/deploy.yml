@@ -1,0 +1,23 @@
+name: Deploy
+
+# Triggers only after CI succeeds on main — deployment never runs
+# independently of a green lint/type-check/test/build run.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL secret not set yet — skipping."
+            echo "This gets configured once the Render service exists (see deployment step)."
+            exit 0
+          fi
+          curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

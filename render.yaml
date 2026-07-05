@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: volatility-platform-api
+    runtime: docker
+    dockerfilePath: docker/Dockerfile.api
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    # Deploys are triggered by the deploy hook in .github/workflows/deploy.yml,
+    # which only fires after CI passes — not on every push. Turn this off in
+    # the Render dashboard (or leave it here) so a red CI run can't reach prod.
+    autoDeploy: false
+    envVars:
+      - key: MONGODB_URI
+        sync: false # set from MongoDB Atlas connection string in the Render dashboard
+      - key: MONGODB_DB_NAME
+        value: volatility_platform
+      - key: MODEL_REGISTRY_BACKEND
+        value: mongodb
+      - key: MODEL_NAME
+        value: volatility_predictor
+      - key: DEFAULT_TICKERS
+        value: AAPL,MSFT,GOOGL,AMZN,TSLA
+      - key: OHLCV_LOOKBACK_DAYS
+        value: "730"
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        sync: false # set to the deployed Vercel URL once the frontend is live

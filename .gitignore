@@ -1,0 +1,30 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ML artifacts (large binary files don't belong in git)
+models_store/*
+!models_store/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
