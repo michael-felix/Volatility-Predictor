@@ -21,13 +21,15 @@ export default function GuidePage() {
         <h2 className="text-lg font-semibold">What is volatility?</h2>
         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
           Volatility measures how much a stock&apos;s price tends to swing up
-          or down over time — not whether it&apos;s going up or down, just how
-          <em> turbulent</em> the ride is likely to be. A stock with low
-          volatility moves in small, steady steps; a stock with high
-          volatility can swing sharply in either direction over a short
-          period. Volatility isn&apos;t inherently bad — it can mean bigger
-          losses <em>or</em> bigger gains — but it does mean less certainty
-          about where the price will land.
+          or down over time — not whether it&apos;s going up or down, just how{" "}
+          <em>turbulent</em>{" "}
+          the ride is likely to be. A stock with low volatility moves in
+          small, steady steps; a stock with high volatility can swing
+          sharply in either direction over a short period. Volatility
+          isn&apos;t inherently bad — it can mean bigger losses{" "}
+          <em>or</em>{" "}
+          bigger gains — but it does mean less certainty about where the
+          price will land.
         </p>
       </section>
 
@@ -120,23 +122,25 @@ export default function GuidePage() {
         <h2 className="text-lg font-semibold">Using the dashboard</h2>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-[var(--text-secondary)]">
           <li>
-            <strong className="text-[var(--foreground)]">Search</strong> for a
-            ticker from the Dashboard, or click a card to open its detail
-            page.
+            <strong className="text-[var(--foreground)]">Search</strong>{" "}
+            for a ticker from the Dashboard, or click a card to open its
+            detail page.
           </li>
           <li>
-            <strong className="text-[var(--foreground)]">Predict volatility</strong> runs
-            the model fresh against the latest price data for that ticker.
+            <strong className="text-[var(--foreground)]">Predict volatility</strong>{" "}
+            runs the model fresh against the latest price data for that
+            ticker.
           </li>
           <li>
-            <strong className="text-[var(--foreground)]">Retrain shared model</strong> retrains
-            the one model used across all tickers — useful after new price
-            data has been ingested.
+            <strong className="text-[var(--foreground)]">Retrain shared model</strong>{" "}
+            retrains the one model used across all tickers — useful after
+            new price data has been ingested.
           </li>
           <li>
-            The <strong className="text-[var(--foreground)]">prediction history chart</strong> tracks
-            how a ticker&apos;s predicted volatility has changed over past
-            predictions.
+            The{" "}
+            <strong className="text-[var(--foreground)]">prediction history chart</strong>{" "}
+            tracks how a ticker&apos;s predicted volatility has changed over
+            past predictions.
           </li>
         </ul>
       </section>
