@@ -1,12 +1,12 @@
 name: Deploy
 
-# Triggers only after CI succeeds on main — deployment never runs
+# Triggers only after CI succeeds on master — deployment never runs
 # independently of a green lint/type-check/test/build run.
 on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:
