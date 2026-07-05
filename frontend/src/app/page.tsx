@@ -1,14 +1,24 @@
 import { ApiStatusBadge } from "@/components/ApiStatusBadge";
 import { TickerListClient } from "@/components/TickerListClient";
 import { api } from "@/lib/api";
-import type { TickerInfo } from "@/lib/types";
+import type { TickerWithLatestPrediction } from "@/lib/types";
 
 export default async function HomePage() {
-  let tickers: TickerInfo[] = [];
+  let tickers: TickerWithLatestPrediction[] = [];
   let loadError: string | null = null;
 
   try {
-    tickers = await api.getTickers();
+    const tickerInfos = await api.getTickers();
+    tickers = await Promise.all(
+      tickerInfos.map(async (t) => {
+        try {
+          const history = await api.getPredictionHistory(t.ticker, 1);
+          return { ...t, latestPrediction: history[0] ?? null };
+        } catch {
+          return { ...t, latestPrediction: null };
+        }
+      }),
+    );
   } catch {
     loadError = "Could not reach the API. Is the backend running?";
   }
@@ -16,7 +26,12 @@ export default async function HomePage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Tickers</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Market Overview</h1>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Predicted volatility across tracked tickers.
+          </p>
+        </div>
         <ApiStatusBadge />
       </div>
 

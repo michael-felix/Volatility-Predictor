@@ -11,6 +11,10 @@ export interface TickerInfo {
   bar_count: number;
 }
 
+export interface TickerWithLatestPrediction extends TickerInfo {
+  latestPrediction: PredictionResponse | null;
+}
+
 export interface PredictionResponse {
   ticker: string;
   horizon_days: number;

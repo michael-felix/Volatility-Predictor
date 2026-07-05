@@ -29,12 +29,37 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-black/10 px-6 py-4 dark:border-white/10">
-          <Link href="/" className="text-lg font-semibold">
-            Volatility Platform
-          </Link>
+        <header className="sticky top-0 z-10 border-b border-[var(--border-hairline)] bg-[var(--background)]/90 px-6 py-4 backdrop-blur">
+          <div className="mx-auto flex max-w-4xl items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+              <span
+                aria-hidden
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: "var(--brand)" }}
+              />
+              Volatility Platform
+            </Link>
+            <nav className="flex items-center gap-5 text-sm text-[var(--text-secondary)]">
+              <Link href="/" className="hover:text-[var(--foreground)]">
+                Dashboard
+              </Link>
+              <Link href="/guide" className="hover:text-[var(--foreground)]">
+                Guide
+              </Link>
+            </nav>
+          </div>
         </header>
+
         <main className="flex-1 px-6 py-6">{children}</main>
+
+        <footer className="border-t border-[var(--border-hairline)] px-6 py-4 text-center text-xs text-[var(--text-muted)]">
+          Educational demo only — not financial advice. Predictions are
+          estimates based on historical patterns.{" "}
+          <Link href="/guide" className="underline hover:text-[var(--text-secondary)]">
+            Read the guide
+          </Link>
+          .
+        </footer>
       </body>
     </html>
   );

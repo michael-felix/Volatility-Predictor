@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
+import { getRiskLevel } from "@/lib/riskLevel";
 import type { ModelInfoResponse, PredictionResponse } from "@/lib/types";
 import { PredictionHistoryChart } from "./PredictionHistoryChart";
+import { RiskBadge } from "./RiskBadge";
 import { StatTile } from "./StatTile";
 
 interface TickerDetailClientProps {
@@ -61,14 +64,14 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
         <button
           onClick={handlePredict}
           disabled={predicting}
-          className="rounded-md bg-[var(--chart-line)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
         >
           {predicting ? "Predicting…" : "Predict volatility"}
         </button>
         <button
           onClick={handleTrain}
           disabled={training}
-          className="rounded-md border border-black/10 px-4 py-2 text-sm font-medium transition hover:border-[var(--chart-line)] disabled:opacity-50 dark:border-white/10"
+          className="rounded-md border border-[var(--border-hairline)] px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] disabled:opacity-50"
         >
           {training ? "Training…" : "Retrain shared model (all tickers)"}
         </button>
@@ -81,23 +84,41 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
       )}
 
       {latest && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile
-            label="Annualized volatility"
-            value={`${latest.annualized_volatility_pct.toFixed(1)}%`}
-            sublabel={`${latest.horizon_days}-day horizon`}
-          />
-          <StatTile
-            label="Expected move"
-            value={`±$${latest.expected_move_dollars.toFixed(2)}`}
-            sublabel={`±${latest.expected_move_pct.toFixed(2)}%`}
-          />
-          <StatTile label="Current price" value={`$${latest.current_price.toFixed(2)}`} />
-          <StatTile
-            label="Expected range"
-            value={`$${latest.expected_price_range_low.toFixed(0)}–$${latest.expected_price_range_high.toFixed(0)}`}
-          />
-        </div>
+        <>
+          <div className="card flex items-start gap-3 p-4">
+            <RiskBadge level={getRiskLevel(latest.annualized_volatility_pct)} />
+            <p className="text-sm text-[var(--text-secondary)]">
+              Based on recent patterns, <strong className="text-[var(--foreground)]">{ticker}</strong>&apos;s
+              price could reasonably move{" "}
+              <strong className="text-[var(--foreground)]">
+                ±${latest.expected_move_dollars.toFixed(2)} (±{latest.expected_move_pct.toFixed(1)}%)
+              </strong>{" "}
+              over the next {latest.horizon_days} trading days. Not sure what this means?{" "}
+              <Link href="/guide" className="underline hover:text-[var(--foreground)]">
+                Read the guide
+              </Link>
+              .
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatTile
+              label="Annualized volatility"
+              value={`${latest.annualized_volatility_pct.toFixed(1)}%`}
+              sublabel={`${latest.horizon_days}-day horizon`}
+            />
+            <StatTile
+              label="Expected move"
+              value={`±$${latest.expected_move_dollars.toFixed(2)}`}
+              sublabel={`±${latest.expected_move_pct.toFixed(2)}%`}
+            />
+            <StatTile label="Current price" value={`$${latest.current_price.toFixed(2)}`} />
+            <StatTile
+              label="Expected range"
+              value={`$${latest.expected_price_range_low.toFixed(0)}–$${latest.expected_price_range_high.toFixed(0)}`}
+            />
+          </div>
+        </>
       )}
 
       <div>
@@ -110,7 +131,7 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
       <div>
         <h2 className="mb-2 text-sm font-medium text-[var(--text-secondary)]">Active model</h2>
         {modelInfo ? (
-          <div className="rounded-lg border border-black/10 bg-[var(--chart-surface)] p-4 text-sm dark:border-white/10">
+          <div className="card p-4 text-sm">
             <div>
               <span className="text-[var(--text-secondary)]">Algorithm:</span>{" "}
               {modelInfo.algorithm}

@@ -6,13 +6,17 @@
 
   /* Data-viz tokens (see project's dataviz skill palette) */
   --chart-surface: #fcfcfb;
+  --chart-surface-raised: #ffffff;
   --chart-line: #2a78d6;
   --chart-area: #2a78d6;
+  --brand: #2a78d6;
+  --brand-tint: rgba(42, 120, 214, 0.08);
   --text-secondary: #52514e;
   --text-muted: #898781;
   --chart-grid: #e1e0d9;
   --chart-baseline: #c3c2b7;
   --border-hairline: rgba(11, 11, 11, 0.1);
+  --card-shadow: 0 1px 2px rgba(11, 11, 11, 0.04), 0 4px 12px rgba(11, 11, 11, 0.04);
 
   --status-good: #0ca30c;
   --status-warning: #fab219;
@@ -32,13 +36,17 @@
     --foreground: #ffffff;
 
     --chart-surface: #1a1a19;
+    --chart-surface-raised: #202020;
     --chart-line: #3987e5;
     --chart-area: #3987e5;
+    --brand: #3987e5;
+    --brand-tint: rgba(57, 135, 229, 0.12);
     --text-secondary: #c3c2b7;
     --text-muted: #898781;
     --chart-grid: #2c2c2a;
     --chart-baseline: #383835;
     --border-hairline: rgba(255, 255, 255, 0.1);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.24);
   }
 }
 
@@ -46,4 +54,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+.card {
+  background: var(--chart-surface);
+  border: 1px solid var(--border-hairline);
+  border-radius: 0.75rem;
+  box-shadow: var(--card-shadow);
 }

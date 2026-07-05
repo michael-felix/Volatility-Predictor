@@ -12,7 +12,7 @@ interface StatTileProps {
  */
 export function StatTile({ label, value, sublabel }: StatTileProps) {
   return (
-    <div className="rounded-lg border border-black/10 bg-[var(--chart-surface)] px-4 py-3 dark:border-white/10">
+    <div className="card px-4 py-3">
       <div className="text-sm text-[var(--text-secondary)]">{label}</div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
       {sublabel && <div className="mt-0.5 text-xs text-[var(--text-muted)]">{sublabel}</div>}

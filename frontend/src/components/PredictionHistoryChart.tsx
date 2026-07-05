@@ -17,7 +17,12 @@ interface PredictionHistoryChartProps {
 
 interface TooltipPayloadItem {
   value: number;
-  payload: { date: string; annualizedVolPct: number; expectedMoveDollars: number };
+  payload: {
+    label: string;
+    asOfDate: string;
+    annualizedVolPct: number;
+    expectedMoveDollars: number;
+  };
 }
 
 function ChartTooltip({
@@ -31,10 +36,10 @@ function ChartTooltip({
   const point = payload[0].payload;
   return (
     <div className="rounded-md border border-black/10 bg-[var(--chart-surface)] px-3 py-2 text-sm shadow-sm dark:border-white/10">
-      <div className="text-[var(--text-secondary)]">{point.date}</div>
+      <div className="text-[var(--text-secondary)]">{point.label}</div>
       <div className="font-semibold">{point.annualizedVolPct.toFixed(1)}% annualized</div>
       <div className="text-xs text-[var(--text-muted)]">
-        Expected move: ±${point.expectedMoveDollars.toFixed(2)}
+        Expected move: ±${point.expectedMoveDollars.toFixed(2)} · based on {point.asOfDate} data
       </div>
     </div>
   );
@@ -54,9 +59,22 @@ export function PredictionHistoryChart({ predictions }: PredictionHistoryChartPr
     );
   }
 
+  // Keyed on when each prediction was actually generated, not the trading
+  // day its data is drawn from (`as_of_date`) — the latter only changes
+  // once a day when new market data arrives, so several predictions run
+  // back-to-back on the same day's data would otherwise collapse onto a
+  // single duplicated x-axis label and the chart would read as flat.
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
   // API returns newest-first; charts read left-to-right chronologically.
   const data = [...predictions].reverse().map((p) => ({
-    date: p.as_of_date,
+    label: formatter.format(new Date(p.generated_at)),
+    asOfDate: p.as_of_date,
     annualizedVolPct: p.annualized_volatility_pct,
     expectedMoveDollars: p.expected_move_dollars,
   }));
@@ -71,10 +89,11 @@ export function PredictionHistoryChart({ predictions }: PredictionHistoryChartPr
             vertical={false}
           />
           <XAxis
-            dataKey="date"
+            dataKey="label"
             stroke="var(--chart-baseline)"
             tick={{ fill: "var(--text-muted)", fontSize: 12 }}
             tickLine={false}
+            minTickGap={24}
           />
           <YAxis
             stroke="var(--chart-baseline)"
