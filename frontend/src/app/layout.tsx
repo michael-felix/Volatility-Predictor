@@ -62,12 +62,15 @@ export default function RootLayout({
         <main className="flex-1 px-6 py-6">{children}</main>
 
         <footer className="border-t border-[var(--border-hairline)] px-6 py-4 text-center text-xs text-[var(--text-muted)]">
-          Educational demo only — not financial advice. Predictions are
-          estimates based on historical patterns.{" "}
-          <Link href="/guide" className="underline hover:text-[var(--text-secondary)]">
-            Read the guide
-          </Link>
-          .
+          <p>
+            Educational demo only — not financial advice. Predictions are
+            estimates based on historical patterns.{" "}
+            <Link href="/guide" className="underline hover:text-[var(--text-secondary)]">
+              Read the guide
+            </Link>
+            .
+          </p>
+          <p className="mt-1 opacity-60">Built by Michael Lim</p>
         </footer>
       </body>
     </html>

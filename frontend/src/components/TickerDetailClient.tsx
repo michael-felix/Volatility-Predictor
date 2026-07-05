@@ -84,6 +84,11 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
           {training ? "Training…" : "Retrain shared model (all tickers)"}
         </motion.button>
       </div>
+      <p className="text-xs text-[var(--text-muted)]">
+        Retraining cross-validates four models and can take under a minute
+        — the rest of the dashboard may respond slowly for other visitors
+        while it runs, since this demo is hosted on a free-tier instance.
+      </p>
 
       <AnimatePresence>
         {error && (
