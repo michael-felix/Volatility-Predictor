@@ -3,7 +3,13 @@ import pytest
 
 from volatility_platform.domain.exceptions import InsufficientDataError
 from volatility_platform.features.pipeline import build_feature_frame
-from volatility_platform.ml.train import CANDIDATE_MODELS, select_best_model, train_model
+from volatility_platform.ml.train import (
+    CANDIDATE_MODELS,
+    HAR_FEATURE_COLUMNS,
+    _feature_subset,
+    select_best_model,
+    train_model,
+)
 
 from ..conftest import synthetic_ohlcv
 
@@ -25,7 +31,23 @@ class TestSelectBestModel:
         assert best_name in CANDIDATE_MODELS
         assert set(all_scores.keys()) == set(CANDIDATE_MODELS.keys())
         for scores in all_scores.values():
-            assert set(scores.keys()) == {"rmse", "mae", "r2"}
+            assert set(scores.keys()) == {"rmse", "mae", "r2", "qlike"}
+
+
+class TestFeatureSubset:
+    def test_har_rv_gets_only_har_columns(self) -> None:
+        features = pd.DataFrame(
+            {"rv_daily": [1], "rv_weekly": [2], "rv_monthly": [3], "other": [4]}
+        )
+        subset = _feature_subset(features, "har_rv")
+        assert list(subset.columns) == list(HAR_FEATURE_COLUMNS)
+
+    def test_other_candidates_get_the_full_feature_set(self) -> None:
+        features = pd.DataFrame({"a": [1], "b": [2]})
+        for name in CANDIDATE_MODELS:
+            if name == "har_rv":
+                continue
+            assert list(_feature_subset(features, name).columns) == ["a", "b"]
 
 
 class TestTrainModel:
@@ -33,7 +55,11 @@ class TestTrainModel:
         frame = _feature_frame(n_days=150)
         model, metadata = train_model(frame, model_name="volatility_predictor", horizon_days=5)
 
-        expected_features = tuple(c for c in frame.columns if c != "target")
+        full_features = tuple(c for c in frame.columns if c != "target")
+        # HAR-RV trains on only its three features; every other candidate
+        # trains on the full engineered feature set.
+        expected_features = HAR_FEATURE_COLUMNS if metadata.algorithm == "har_rv" else full_features
+
         assert metadata.name == "volatility_predictor"
         assert metadata.horizon_days == 5
         assert metadata.feature_names == expected_features
@@ -50,7 +76,7 @@ class TestTrainModel:
 
         assert set(metadata.candidate_metrics.keys()) == set(CANDIDATE_MODELS.keys())
         for scores in metadata.candidate_metrics.values():
-            assert set(scores.keys()) == {"rmse", "mae", "r2"}
+            assert set(scores.keys()) == {"rmse", "mae", "r2", "qlike"}
 
         # The winning algorithm's entry in candidate_metrics must be the same
         # scores recorded as the model's own `metrics` -- one source of truth.

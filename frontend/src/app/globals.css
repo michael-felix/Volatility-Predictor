@@ -66,3 +66,20 @@ body {
     box-shadow 0.2s ease,
     background-color 0.2s ease;
 }
+
+/* A subtle universal hover lift, even for cards that aren't clickable --
+   no pointer cursor change, so it never implies something it isn't, but
+   every panel on the site feels consistently alive under the cursor. */
+.card:hover {
+  box-shadow:
+    0 2px 4px rgba(11, 11, 11, 0.06),
+    0 8px 20px rgba(11, 11, 11, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card:hover {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.28),
+      0 8px 20px rgba(0, 0, 0, 0.32);
+  }
+}

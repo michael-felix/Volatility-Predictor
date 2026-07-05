@@ -13,6 +13,7 @@ export function RiskBadge({ level }: { level: RiskLevel }) {
     <motion.span
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.06 }}
       transition={{ duration: 0.25 }}
       className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium"
       style={{ borderColor: `color-mix(in srgb, ${color} 40%, transparent)`, color }}

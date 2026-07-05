@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Real-time stock volatility predictions.",
 };
 
+const NAV_LINK_CLASS =
+  "relative transition-colors hover:text-[var(--foreground)] " +
+  "after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full " +
+  "after:origin-left after:scale-x-0 after:bg-[var(--brand)] " +
+  "after:transition-transform after:duration-200 hover:after:scale-x-100";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,13 +46,13 @@ export default function RootLayout({
               Volatility Platform
             </Link>
             <nav className="flex items-center gap-5 text-sm text-[var(--text-secondary)]">
-              <Link href="/" className="transition-colors hover:text-[var(--foreground)]">
+              <Link href="/" className={NAV_LINK_CLASS}>
                 Dashboard
               </Link>
-              <Link href="/models" className="transition-colors hover:text-[var(--foreground)]">
+              <Link href="/models" className={NAV_LINK_CLASS}>
                 Models
               </Link>
-              <Link href="/guide" className="transition-colors hover:text-[var(--foreground)]">
+              <Link href="/guide" className={NAV_LINK_CLASS}>
                 Guide
               </Link>
             </nav>

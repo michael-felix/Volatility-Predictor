@@ -44,12 +44,14 @@ python pipelines/ingest_daily.py
 ```
 
 Then train the shared pooled model. `POST /train` works for local dev, but
-training cross-validates five candidate models (linear regression, ridge,
-random forest, gradient boosting, XGBoost) and can be too slow/memory-heavy
-for a free-tier hosting instance (it hit Render's proxy timeout in
-practice). The more reliable path — and the better MLOps pattern generally,
-since training shouldn't run inside a resource-constrained API request —
-is training locally (or in CI) against the same production database:
+training cross-validates four deliberately different candidate models
+(HAR-RV, ridge, random forest, XGBoost — see `ml/train.py` for why each one
+is in the set rather than a longer list of near-duplicates) and can be too
+slow/memory-heavy for a free-tier hosting instance (it hit Render's proxy
+timeout in practice). The more reliable path — and the better MLOps pattern
+generally, since training shouldn't run inside a resource-constrained API
+request — is training locally (or in CI) against the same production
+database:
 
 ```bash
 MODEL_REGISTRY_BACKEND=mongodb python pipelines/train_model.py

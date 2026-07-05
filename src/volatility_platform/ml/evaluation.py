@@ -19,12 +19,33 @@ from sklearn.model_selection import TimeSeriesSplit
 from volatility_platform.domain.exceptions import InsufficientDataError
 
 
+def qlike_loss(y_true: pd.Series, y_pred: np.ndarray, epsilon: float = 1e-6) -> float:
+    """QLIKE loss: the standard evaluation metric in the volatility-forecasting
+    literature (Patton 2011) for comparing variance/volatility forecasts,
+    used here alongside RMSE/MAE/R^2 rather than instead of them. Unlike
+    RMSE/MAE, QLIKE is robust to the choice of volatility proxy and
+    penalizes underprediction (missing a real volatility spike) more
+    heavily than overprediction of the same magnitude — matching the
+    real-world asymmetry in the cost of being wrong about risk.
+
+    Computed on the variance scale (volatility squared), per convention.
+    Predictions are clipped to a small positive epsilon first: this loss
+    is undefined for a zero/negative variance forecast, and a linear
+    model can emit a small negative volatility near zero.
+    """
+    true_var = np.clip(np.asarray(y_true, dtype=float) ** 2, epsilon, None)
+    pred_var = np.clip(np.asarray(y_pred, dtype=float), epsilon, None) ** 2
+    ratio = true_var / pred_var
+    return float(np.mean(ratio - np.log(ratio) - 1))
+
+
 def regression_metrics(y_true: pd.Series, y_pred: np.ndarray) -> dict[str, float]:
-    """Compute RMSE, MAE, and R^2 for a set of predictions."""
+    """Compute RMSE, MAE, R^2, and QLIKE for a set of predictions."""
     return {
         "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
         "mae": float(mean_absolute_error(y_true, y_pred)),
         "r2": float(r2_score(y_true, y_pred)),
+        "qlike": qlike_loss(y_true, y_pred),
     }
 
 

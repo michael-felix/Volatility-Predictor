@@ -5,6 +5,27 @@ training consumes labeled historical data and runs offline (a scheduled
 job or manual CLI invocation, see `pipelines/train_model.py`), while
 inference runs synchronously inside an API request and must be fast and
 side-effect-free beyond producing a single prediction.
+
+Candidate models are deliberately four *different* approaches rather
+than a longer list of near-duplicates:
+
+- **HAR-RV**: the classic econometric volatility model (Corsi 2009) —
+  plain linear regression using only the three HAR realized-volatility
+  features (daily/weekly/monthly), nothing else. This is the standard
+  domain-specific baseline for volatility forecasting specifically,
+  not a generic ML model bolted onto the problem.
+- **Ridge**: linear regression with L2 regularization over the *full*
+  engineered feature set. Included instead of plain (unregularized)
+  linear regression — Ridge subsumes it (alpha -> 0 recovers OLS) and
+  is safer with many correlated engineered features relative to the
+  sample size.
+- **Random Forest**: a bagged ensemble of decision trees — a different
+  bias/variance tradeoff from either linear model, and from boosting.
+- **XGBoost**: regularized gradient-boosted trees. Included instead of
+  scikit-learn's plain `GradientBoostingRegressor` — the two are close
+  to the same underlying algorithm, and XGBoost's built-in
+  regularization tends to generalize better on small datasets like
+  this one's per-training-run sample size.
 """
 
 from __future__ import annotations
@@ -13,7 +34,7 @@ from datetime import UTC, datetime
 
 import pandas as pd
 from sklearn.base import BaseEstimator, clone
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression, Ridge
 from xgboost import XGBRegressor
 
@@ -27,17 +48,27 @@ RANDOM_STATE = 42
 # to produce a meaningful model comparison.
 MIN_TRAINING_ROWS = 60
 
+# The three features Corsi's HAR-RV model uses — see features/volatility.py::har_features.
+HAR_FEATURE_COLUMNS = ("rv_daily", "rv_weekly", "rv_monthly")
+
 CANDIDATE_MODELS: dict[str, BaseEstimator] = {
-    "linear_regression": LinearRegression(),
+    "har_rv": LinearRegression(),
     "ridge": Ridge(alpha=1.0, random_state=RANDOM_STATE),
     "random_forest": RandomForestRegressor(
         n_estimators=200, max_depth=6, random_state=RANDOM_STATE
     ),
-    "gradient_boosting": GradientBoostingRegressor(
-        n_estimators=200, max_depth=3, random_state=RANDOM_STATE
-    ),
     "xgboost": XGBRegressor(n_estimators=200, max_depth=3, random_state=RANDOM_STATE, n_jobs=1),
 }
+
+# Candidates not listed here train on every engineered feature column.
+CANDIDATE_FEATURE_COLUMNS: dict[str, tuple[str, ...]] = {
+    "har_rv": HAR_FEATURE_COLUMNS,
+}
+
+
+def _feature_subset(features: pd.DataFrame, candidate_name: str) -> pd.DataFrame:
+    columns = CANDIDATE_FEATURE_COLUMNS.get(candidate_name)
+    return features[list(columns)] if columns else features
 
 
 def select_best_model(
@@ -55,7 +86,9 @@ def select_best_model(
     target = feature_frame["target"]
 
     all_scores = {
-        name: time_series_cv_scores(model, features, target, n_splits=n_splits)
+        name: time_series_cv_scores(
+            model, _feature_subset(features, name), target, n_splits=n_splits
+        )
         for name, model in CANDIDATE_MODELS.items()
     }
     best_name = min(all_scores, key=lambda name: all_scores[name]["rmse"])
@@ -79,9 +112,10 @@ def train_model(
 
     features = feature_frame.drop(columns=["target"])
     target = feature_frame["target"]
+    best_features = _feature_subset(features, best_candidate_name)
 
     estimator = clone(CANDIDATE_MODELS[best_candidate_name])
-    estimator.fit(features, target)
+    estimator.fit(best_features, target)
 
     trained_at = datetime.now(UTC)
     metadata = ModelMetadata(
@@ -90,7 +124,7 @@ def train_model(
         algorithm=best_candidate_name,
         horizon_days=horizon_days,
         trained_at=trained_at,
-        feature_names=tuple(features.columns),
+        feature_names=tuple(best_features.columns),
         metrics=all_scores[best_candidate_name],
         hyperparameters=estimator.get_params(),
         training_samples=len(feature_frame),

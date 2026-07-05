@@ -36,9 +36,8 @@ class TestPredictVolatility:
         assert isinstance(prediction.as_of_date, date)
 
     def test_predicted_volatility_never_negative_even_for_linear_model(self) -> None:
-        # Force linear_regression specifically by training on a tiny, well-behaved frame
-        # is nondeterministic in which model wins CV; instead just assert the invariant
-        # holds regardless of which candidate was actually selected.
+        # Which candidate wins CV is data-dependent; assert the non-negativity
+        # invariant holds regardless of which one was actually selected.
         ohlcv = synthetic_ohlcv(n_days=150, seed=7)
         train_frame = build_feature_frame(ohlcv, horizon=5, include_target=True)
         model, metadata = train_model(

@@ -66,6 +66,7 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
         <motion.button
           onClick={handlePredict}
           disabled={predicting}
+          whileHover={predicting ? undefined : { scale: 1.03 }}
           whileTap={{ scale: 0.96 }}
           className="flex items-center gap-2 rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
         >
@@ -75,6 +76,7 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
         <motion.button
           onClick={handleTrain}
           disabled={training}
+          whileHover={training ? undefined : { scale: 1.03 }}
           whileTap={{ scale: 0.96 }}
           className="flex items-center gap-2 rounded-md border border-[var(--border-hairline)] px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] disabled:opacity-50"
         >

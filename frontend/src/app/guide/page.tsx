@@ -122,15 +122,17 @@ export default function GuidePage() {
             train on.
           </p>
           <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-            Several candidate algorithms (linear/ridge regression, random
-            forest, gradient boosting, XGBoost) are cross-validated against
-            each other on every training run, and the one with the best
-            held-out accuracy is used for predictions — see the{" "}
+            Four deliberately different candidate algorithms are
+            cross-validated against each other on every training run — from
+            HAR-RV (the purpose-built econometric volatility model) to ridge
+            regression, random forest, and XGBoost — and the one with the
+            best held-out accuracy is used for predictions. See the{" "}
             <Link href="/models" className="underline hover:text-[var(--foreground)]">
               model comparison page
             </Link>{" "}
-            for the full breakdown. The model is retrained periodically as new
-            price data comes in; you can see which version produced a given
+            for the full breakdown, including why each one is in the
+            candidate set. The model is retrained periodically as new price
+            data comes in; you can see which version produced a given
             prediction under &quot;Active model&quot; on each ticker&apos;s
             page.
           </p>

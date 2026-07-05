@@ -37,7 +37,7 @@ export function TickerListClient({ tickers }: TickerListClientProps) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search tickers…"
-        className="w-full max-w-xs rounded-md border border-[var(--border-hairline)] bg-[var(--chart-surface)] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--brand)]"
+        className="w-full max-w-xs rounded-md border border-[var(--border-hairline)] bg-[var(--chart-surface)] px-3 py-2 text-sm outline-none transition-colors hover:border-[var(--brand)]/50 focus:border-[var(--brand)]"
       />
 
       <motion.div
