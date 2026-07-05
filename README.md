@@ -43,7 +43,20 @@ Run it manually or as a scheduled job:
 python pipelines/ingest_daily.py
 ```
 
-Then train the shared pooled model via the API: `POST /train`.
+Then train the shared pooled model. `POST /train` works for local dev, but
+training cross-validates three candidate models and can be too slow/memory-
+heavy for a free-tier hosting instance (it hit Render's proxy timeout in
+practice). The more reliable path — and the better MLOps pattern generally,
+since training shouldn't run inside a resource-constrained API request —
+is training locally (or in CI) against the same production database:
+
+```bash
+MODEL_REGISTRY_BACKEND=mongodb python pipelines/train_model.py
+```
+
+This writes the trained model straight to MongoDB, where the deployed API
+(which also uses the `mongodb` backend in production) picks it up immediately
+via `GET /model-info` / `POST /predict` — no redeploy needed.
 
 ## Running tests
 
@@ -94,7 +107,11 @@ Three pieces, each on the free/hobby tier of its platform: **MongoDB Atlas**
 2. Database Access → add a database user (username/password).
 3. Network Access → add `0.0.0.0/0` (allow from anywhere) — Render's outbound
    IPs aren't static on the free plan, so IP allowlisting isn't practical here;
-   the database user's password is what actually gates access.
+   the database user's password is what actually gates access. This is a real
+   tradeoff (any IP can *attempt* a connection) but the standard one for this
+   setup: authentication still applies, and a strong random password mitigates
+   most of the exposure. Atlas VPC Peering / Private Endpoints avoid this
+   entirely but require a paid (M10+) tier.
 4. Get the connection string (Connect → Drivers → Python), it looks like
    `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/`. This becomes
    `MONGODB_URI` in Render.
