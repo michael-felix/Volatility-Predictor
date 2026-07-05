@@ -75,6 +75,11 @@ class TrainResponse(BaseModel):
     training_samples: int
     metrics: dict[str, float]
     feature_names: list[str]
+    candidate_metrics: dict[str, dict[str, float]] = Field(
+        default_factory=dict,
+        description="Every candidate model's CV metrics from the training run that "
+        "produced this model, keyed by algorithm name — powers the model comparison page.",
+    )
 
     @classmethod
     def from_domain(cls, metadata: ModelMetadata) -> Self:
@@ -87,6 +92,7 @@ class TrainResponse(BaseModel):
             training_samples=metadata.training_samples,
             metrics=metadata.metrics,
             feature_names=list(metadata.feature_names),
+            candidate_metrics=metadata.candidate_metrics,
         )
 
 

@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -6,7 +7,11 @@ from sklearn.linear_model import LinearRegression
 
 from volatility_platform.domain.exceptions import ModelNotFoundError
 from volatility_platform.domain.models import ModelMetadata
-from volatility_platform.ml.registry import FileSystemModelRegistry
+from volatility_platform.ml.registry import (
+    FileSystemModelRegistry,
+    metadata_from_dict,
+    metadata_to_dict,
+)
 
 
 def _sample_metadata(version: str = "20260705_120000") -> ModelMetadata:
@@ -74,3 +79,22 @@ class TestFileSystemModelRegistry:
         self, registry: FileSystemModelRegistry
     ) -> None:
         assert await registry.list_versions("nonexistent_model") == []
+
+
+class TestMetadataSerializationBackwardCompat:
+    def test_candidate_metrics_round_trips(self) -> None:
+        with_candidates = replace(
+            _sample_metadata(),
+            candidate_metrics={"linear_regression": {"rmse": 0.01, "mae": 0.01, "r2": 0.1}},
+        )
+        restored = metadata_from_dict(metadata_to_dict(with_candidates))
+        assert restored == with_candidates
+
+    def test_missing_candidate_metrics_key_defaults_to_empty_dict(self) -> None:
+        """Simulates a model persisted before `candidate_metrics` existed --
+        deserializing it must not raise, and should default gracefully."""
+        legacy_data = metadata_to_dict(_sample_metadata())
+        del legacy_data["candidate_metrics"]
+
+        restored = metadata_from_dict(legacy_data)
+        assert restored.candidate_metrics == {}

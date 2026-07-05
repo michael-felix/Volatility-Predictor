@@ -50,10 +50,10 @@ export function ApiStatusBadge() {
     <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
       <span
         aria-hidden
-        className="inline-block h-2.5 w-2.5 rounded-full"
+        className="inline-block h-2.5 w-2.5 rounded-full transition-colors duration-300"
         style={{ backgroundColor: color }}
       />
-      <span>{label}</span>
+      <span className="transition-colors duration-300">{label}</span>
     </div>
   );
 }

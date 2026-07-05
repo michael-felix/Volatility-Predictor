@@ -56,7 +56,12 @@ def metadata_to_dict(metadata: ModelMetadata) -> dict[str, Any]:
 
 
 def metadata_from_dict(data: dict[str, Any]) -> ModelMetadata:
-    """Inverse of `metadata_to_dict`."""
+    """Inverse of `metadata_to_dict`.
+
+    `candidate_metrics` defaults to `{}` for records persisted before that
+    field existed, so previously-trained models already sitting in the
+    registry can still be loaded rather than failing to deserialize.
+    """
     return ModelMetadata(
         name=data["name"],
         version=data["version"],
@@ -67,6 +72,7 @@ def metadata_from_dict(data: dict[str, Any]) -> ModelMetadata:
         metrics=data["metrics"],
         hyperparameters=data["hyperparameters"],
         training_samples=data["training_samples"],
+        candidate_metrics=data.get("candidate_metrics", {}),
     )
 
 

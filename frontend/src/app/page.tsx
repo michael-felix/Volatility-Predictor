@@ -1,4 +1,5 @@
 import { ApiStatusBadge } from "@/components/ApiStatusBadge";
+import { FadeIn } from "@/components/FadeIn";
 import { TickerListClient } from "@/components/TickerListClient";
 import { api } from "@/lib/api";
 import type { TickerWithLatestPrediction } from "@/lib/types";
@@ -25,15 +26,17 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Market Overview</h1>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Predicted volatility across tracked tickers.
-          </p>
+      <FadeIn>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">Market Overview</h1>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Predicted volatility across tracked tickers.
+            </p>
+          </div>
+          <ApiStatusBadge />
         </div>
-        <ApiStatusBadge />
-      </div>
+      </FadeIn>
 
       {loadError ? (
         <p className="text-sm text-[var(--status-critical)]">{loadError}</p>

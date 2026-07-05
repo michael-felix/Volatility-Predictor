@@ -40,10 +40,13 @@ export default function RootLayout({
               Volatility Platform
             </Link>
             <nav className="flex items-center gap-5 text-sm text-[var(--text-secondary)]">
-              <Link href="/" className="hover:text-[var(--foreground)]">
+              <Link href="/" className="transition-colors hover:text-[var(--foreground)]">
                 Dashboard
               </Link>
-              <Link href="/guide" className="hover:text-[var(--foreground)]">
+              <Link href="/models" className="transition-colors hover:text-[var(--foreground)]">
+                Models
+              </Link>
+              <Link href="/guide" className="transition-colors hover:text-[var(--foreground)]">
                 Guide
               </Link>
             </nav>

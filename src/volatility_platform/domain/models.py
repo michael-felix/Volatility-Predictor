@@ -136,7 +136,13 @@ class VolatilityPrediction:
 
 @dataclass(frozen=True, slots=True)
 class ModelMetadata:
-    """Metadata describing a trained model artifact — powers the model registry."""
+    """Metadata describing a trained model artifact — powers the model registry.
+
+    `metrics` is the winning candidate's own cross-validated scores;
+    `candidate_metrics` additionally keeps every candidate considered during
+    model selection (keyed by algorithm name), so the "why this model won"
+    comparison isn't discarded — it's what the model comparison page shows.
+    """
 
     name: str
     version: str
@@ -147,6 +153,7 @@ class ModelMetadata:
     metrics: dict[str, float]
     hyperparameters: dict[str, object]
     training_samples: int
+    candidate_metrics: dict[str, dict[str, float]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.training_samples <= 0:

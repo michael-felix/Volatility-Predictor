@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
@@ -7,6 +8,7 @@ import { getRiskLevel } from "@/lib/riskLevel";
 import type { ModelInfoResponse, PredictionResponse } from "@/lib/types";
 import { PredictionHistoryChart } from "./PredictionHistoryChart";
 import { RiskBadge } from "./RiskBadge";
+import { Spinner } from "./Spinner";
 import { StatTile } from "./StatTile";
 
 interface TickerDetailClientProps {
@@ -61,37 +63,60 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <button
+        <motion.button
           onClick={handlePredict}
           disabled={predicting}
-          className="rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          whileTap={{ scale: 0.96 }}
+          className="flex items-center gap-2 rounded-md bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-50"
         >
+          {predicting && <Spinner />}
           {predicting ? "Predicting…" : "Predict volatility"}
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={handleTrain}
           disabled={training}
-          className="rounded-md border border-[var(--border-hairline)] px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] disabled:opacity-50"
+          whileTap={{ scale: 0.96 }}
+          className="flex items-center gap-2 rounded-md border border-[var(--border-hairline)] px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] disabled:opacity-50"
         >
+          {training && <Spinner />}
           {training ? "Training…" : "Retrain shared model (all tickers)"}
-        </button>
+        </motion.button>
       </div>
 
-      {error && (
-        <div className="rounded-md border border-[var(--status-critical)]/30 bg-[var(--status-critical)]/10 px-3 py-2 text-sm text-[var(--status-critical)]">
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden rounded-md border border-[var(--status-critical)]/30 bg-[var(--status-critical)]/10 px-3 py-2 text-sm text-[var(--status-critical)]"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {latest && (
-        <>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4"
+        >
+          {/* Each StatTile below crossfades its own value when a new
+              prediction arrives (keyed internally on the value string) --
+              this block itself never unmounts/remounts on new data, since
+              doing so via AnimatePresence previously caused a layout shift
+              that corrupted the chart's ResizeObserver-driven redraw. */}
           <div className="card flex items-start gap-3 p-4">
             <RiskBadge level={getRiskLevel(latest.annualized_volatility_pct)} />
             <p className="text-sm text-[var(--text-secondary)]">
-              Based on recent patterns, <strong className="text-[var(--foreground)]">{ticker}</strong>&apos;s
-              price could reasonably move{" "}
+              Based on recent patterns,{" "}
+              <strong className="text-[var(--foreground)]">{ticker}</strong>&apos;s price could
+              reasonably move{" "}
               <strong className="text-[var(--foreground)]">
-                ±${latest.expected_move_dollars.toFixed(2)} (±{latest.expected_move_pct.toFixed(1)}%)
+                ±${latest.expected_move_dollars.toFixed(2)} (±
+                {latest.expected_move_pct.toFixed(1)}%)
               </strong>{" "}
               over the next {latest.horizon_days} trading days. Not sure what this means?{" "}
               <Link href="/guide" className="underline hover:text-[var(--foreground)]">
@@ -118,7 +143,7 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
               value={`$${latest.expected_price_range_low.toFixed(0)}–$${latest.expected_price_range_high.toFixed(0)}`}
             />
           </div>
-        </>
+        </motion.div>
       )}
 
       <div>
@@ -129,7 +154,15 @@ export function TickerDetailClient({ ticker, initialHistory }: TickerDetailClien
       </div>
 
       <div>
-        <h2 className="mb-2 text-sm font-medium text-[var(--text-secondary)]">Active model</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-medium text-[var(--text-secondary)]">Active model</h2>
+          <Link
+            href="/models"
+            className="text-xs text-[var(--brand)] underline hover:no-underline"
+          >
+            Compare all models →
+          </Link>
+        </div>
         {modelInfo ? (
           <div className="card p-4 text-sm">
             <div>

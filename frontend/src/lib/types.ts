@@ -40,6 +40,7 @@ export interface TrainResponse {
   training_samples: number;
   metrics: Record<string, number>;
   feature_names: string[];
+  candidate_metrics: Record<string, { rmse: number; mae: number; r2: number }>;
 }
 
 export type ModelInfoResponse = TrainResponse;

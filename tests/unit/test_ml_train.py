@@ -43,3 +43,21 @@ class TestTrainModel:
         # The fitted model must actually be usable for inference on the same columns.
         prediction = model.predict(frame[list(expected_features)].iloc[[-1]])
         assert prediction.shape == (1,)
+
+    def test_candidate_metrics_covers_every_model_and_matches_the_winner(self) -> None:
+        frame = _feature_frame(n_days=150)
+        _, metadata = train_model(frame, model_name="volatility_predictor", horizon_days=5)
+
+        assert set(metadata.candidate_metrics.keys()) == set(CANDIDATE_MODELS.keys())
+        for scores in metadata.candidate_metrics.values():
+            assert set(scores.keys()) == {"rmse", "mae", "r2"}
+
+        # The winning algorithm's entry in candidate_metrics must be the same
+        # scores recorded as the model's own `metrics` -- one source of truth.
+        assert metadata.candidate_metrics[metadata.algorithm] == metadata.metrics
+
+        # And it must actually be the lowest-RMSE candidate, not just present.
+        best_by_rmse = min(
+            metadata.candidate_metrics, key=lambda name: metadata.candidate_metrics[name]["rmse"]
+        )
+        assert metadata.algorithm == best_by_rmse

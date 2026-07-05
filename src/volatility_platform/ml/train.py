@@ -14,7 +14,8 @@ from datetime import UTC, datetime
 import pandas as pd
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
+from xgboost import XGBRegressor
 
 from volatility_platform.domain.exceptions import InsufficientDataError
 from volatility_platform.domain.models import ModelMetadata
@@ -28,12 +29,14 @@ MIN_TRAINING_ROWS = 60
 
 CANDIDATE_MODELS: dict[str, BaseEstimator] = {
     "linear_regression": LinearRegression(),
+    "ridge": Ridge(alpha=1.0, random_state=RANDOM_STATE),
     "random_forest": RandomForestRegressor(
         n_estimators=200, max_depth=6, random_state=RANDOM_STATE
     ),
     "gradient_boosting": GradientBoostingRegressor(
         n_estimators=200, max_depth=3, random_state=RANDOM_STATE
     ),
+    "xgboost": XGBRegressor(n_estimators=200, max_depth=3, random_state=RANDOM_STATE, n_jobs=1),
 }
 
 
@@ -91,5 +94,6 @@ def train_model(
         metrics=all_scores[best_candidate_name],
         hyperparameters=estimator.get_params(),
         training_samples=len(feature_frame),
+        candidate_metrics=all_scores,
     )
     return estimator, metadata

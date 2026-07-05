@@ -22,6 +22,7 @@ from volatility_platform.api.dependencies import get_model_registry_dependency
 from volatility_platform.api.main import app
 from volatility_platform.domain.models import OHLCVBar, Ticker
 from volatility_platform.ml.registry import FileSystemModelRegistry
+from volatility_platform.ml.train import CANDIDATE_MODELS
 from volatility_platform.repositories.price_repository import PriceRepository
 
 from ..conftest import synthetic_ohlcv
@@ -108,6 +109,8 @@ class TestTrainingAndPrediction:
         assert train_response.status_code == 200
         train_body = train_response.json()
         assert train_body["training_samples"] > 0
+        assert train_body["algorithm"] in train_body["candidate_metrics"]
+        assert set(train_body["candidate_metrics"].keys()) == set(CANDIDATE_MODELS.keys())
 
         predict_response = await client.post("/predict", json={"ticker": "AAPL"})
         assert predict_response.status_code == 200
@@ -123,7 +126,9 @@ class TestTrainingAndPrediction:
 
         info_response = await client.get("/model-info")
         assert info_response.status_code == 200
-        assert info_response.json()["model_name"] == train_body["model_name"]
+        info_body = info_response.json()
+        assert info_body["model_name"] == train_body["model_name"]
+        assert set(info_body["candidate_metrics"].keys()) == set(CANDIDATE_MODELS.keys())
 
     async def test_predict_without_stored_history_returns_404(
         self, client: httpx.AsyncClient

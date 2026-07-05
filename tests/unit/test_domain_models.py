@@ -160,3 +160,16 @@ class TestModelMetadata:
         kwargs["feature_names"] = ()
         with pytest.raises(DataValidationError):
             ModelMetadata(**kwargs)
+
+    def test_candidate_metrics_defaults_to_empty_dict(self) -> None:
+        meta = ModelMetadata(**self._valid_kwargs())
+        assert meta.candidate_metrics == {}
+
+    def test_candidate_metrics_can_be_populated(self) -> None:
+        kwargs = self._valid_kwargs()
+        kwargs["candidate_metrics"] = {
+            "random_forest": {"rmse": 0.012, "mae": 0.009, "r2": 0.1},
+            "xgboost": {"rmse": 0.015, "mae": 0.011, "r2": 0.05},
+        }
+        meta = ModelMetadata(**kwargs)
+        assert meta.candidate_metrics["xgboost"]["rmse"] == 0.015

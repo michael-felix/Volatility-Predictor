@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FadeIn } from "@/components/FadeIn";
 import { TickerDetailClient } from "@/components/TickerDetailClient";
 import { api } from "@/lib/api";
 import type { PredictionResponse } from "@/lib/types";
@@ -20,12 +21,14 @@ export default async function TickerDetailPage({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <Link href="/" className="text-sm text-[var(--text-secondary)] hover:underline">
-          ← All tickers
-        </Link>
-        <h1 className="mt-1 text-2xl font-semibold">{ticker}</h1>
-      </div>
+      <FadeIn>
+        <div>
+          <Link href="/" className="text-sm text-[var(--text-secondary)] hover:underline">
+            ← All tickers
+          </Link>
+          <h1 className="mt-1 text-2xl font-semibold">{ticker}</h1>
+        </div>
+      </FadeIn>
 
       <TickerDetailClient ticker={ticker} initialHistory={history} />
     </div>
