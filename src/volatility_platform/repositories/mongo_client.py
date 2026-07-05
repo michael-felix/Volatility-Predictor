@@ -11,6 +11,7 @@ synchronous code paths too, such as `ml.registry.get_model_registry()`.
 from functools import lru_cache
 from typing import Any
 
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from volatility_platform.config.settings import settings
@@ -22,7 +23,15 @@ def get_client() -> AsyncIOMotorClient[dict[str, Any]]:
     # fast (seconds, not the 30s default) — this matters for both the
     # `/health` check and app startup: neither should hang for half a
     # minute just to discover the database is down.
-    return AsyncIOMotorClient(settings.mongodb_uri, serverSelectionTimeoutMS=5000)
+    #
+    # tlsCAFile is pinned to certifi's bundle rather than relying on the
+    # system trust store: minimal container images (e.g. python:slim) can
+    # ship an OpenSSL/CA setup that fails the TLS handshake against
+    # MongoDB Atlas with a cryptic "TLSV1_ALERT_INTERNAL_ERROR" — this
+    # sidesteps that regardless of what the host image provides.
+    return AsyncIOMotorClient(
+        settings.mongodb_uri, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where()
+    )
 
 
 def get_database() -> AsyncIOMotorDatabase[dict[str, Any]]:

@@ -19,6 +19,7 @@ dependencies = [
     "joblib>=1.4",
     "python-dotenv>=1.0",
     "prometheus-client>=0.20",
+    "certifi>=2024.0.0",
 ]
 
 [project.optional-dependencies]
